@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dockerized Web Server</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Roboto&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      min-height: 100vh;
+      color: #fff;
+      background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364, #00e0ff, #00ffcc);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      display: flex;
+      flex-direction: column;
+    }
+    @keyframes gradientBG {
+      0% {background-position: 0% 50%;}
+      50% {background-position: 100% 50%;}
+      100% {background-position: 0% 50%;}
+    }
+    header {
+      padding: 40px 0 20px 0;
+      text-align: center;
+      background: rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 4px 24px 0 rgba(0,224,255,0.10);
+      backdrop-filter: blur(4px);
+      position: relative;
+      overflow: visible;
+    }
+    .docker-logo {
+      width: 64px;
+      height: 64px;
+      position: absolute;
+      left: 50%;
+      top: -32px;
+      transform: translateX(-50%);
+      animation: floatLogo 3s ease-in-out infinite;
+      filter: drop-shadow(0 0 16px #00e0ff88);
+      z-index: 2;
+    }
+    @keyframes floatLogo {
+      0%, 100% { transform: translateX(-50%) translateY(0);}
+      50% { transform: translateX(-50%) translateY(-18px);}
+    }
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 3.2rem;
+      margin: 0;
+      color: #00e0ff;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 24px #00e0ff77, 0 0px 2px #000a;
+      filter: drop-shadow(0 0 8px #00e0ff55);
+    }
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 10px;
+      animation: fadeInMain 1.2s cubic-bezier(.4,1.6,.6,1) 0.2s both;
+    }
+    @keyframes fadeInMain {
+      from { opacity: 0; transform: translateY(40px);}
+      to { opacity: 1; transform: none;}
+    }
+    .glass {
+      background: rgba(255,255,255,0.10);
+      border-radius: 22px;
+      box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18), 0 0 0 4px rgba(0,224,255,0.10);
+      backdrop-filter: blur(10px);
+      border: 2.5px solid transparent;
+      background-clip: padding-box;
+      padding: 38px 32px;
+      margin-bottom: 32px;
+      max-width: 700px;
+      width: 100%;
+      position: relative;
+      transition: box-shadow 0.3s, border 0.3s;
+      z-index: 1;
+    }
+    .glass::before {
+      content: "";
+      position: absolute;
+      inset: -3px;
+      border-radius: 24px;
+      padding: 0;
+      z-index: -1;
+      background: linear-gradient(120deg, #00e0ff 0%, #00ffcc 100%);
+      opacity: 0.5;
+      filter: blur(8px);
+      animation: borderGlow 3s linear infinite;
+    }
+    @keyframes borderGlow {
+      0% { opacity: 0.5; }
+      50% { opacity: 0.9; }
+      100% { opacity: 0.5; }
+    }
+    .glass:hover {
+      box-shadow: 0 12px 40px 0 rgba(0,224,255,0.22), 0 0 0 6px rgba(0,224,255,0.13);
+      border-color: #00e0ff;
+    }
+    main p {
+      font-size: 1.28rem;
+      margin-bottom: 18px;
+      color: #e0f7fa;
+      text-shadow: 0 1px 8px #0004;
+      line-height: 1.6;
+    }
+    .commands {
+      background: rgba(0,0,0,0.28);
+      border: 1.5px solid rgba(0,224,255,0.22);
+      border-radius: 16px;
+      padding: 28px 18px;
+      margin-top: 20px;
+      font-family: 'Fira Mono', 'Consolas', monospace;
+      box-shadow: 0 2px 16px 0 rgba(0,224,255,0.10);
+      transition: box-shadow 0.3s, border 0.3s;
+      max-width: 700px;
+      width: 100%;
+      position: relative;
+      overflow-x: auto;
+    }
+    .commands:hover {
+      box-shadow: 0 8px 32px 0 rgba(0,224,255,0.18);
+      border-color: #00e0ff;
+    }
+    .commands h2 {
+      text-align: center;
+      color: #00e0ff;
+      margin-bottom: 18px;
+      letter-spacing: 1px;
+      font-size: 1.4rem;
+      text-shadow: 0 1px 8px #00e0ff33;
+    }
+    .commands code {
+      display: block;
+      margin: 10px 0;
+      color: #00ffcc;
+      background: rgba(0, 32, 39, 0.60);
+      padding: 12px 14px;
+      border-radius: 7px;
+      font-size: 1.08rem;
+      transition: background 0.2s, box-shadow 0.2s;
+      border-left: 4px solid #00e0ff55;
+      box-shadow: 0 1px 4px #00e0ff22;
+      word-break: break-all;
+      position: relative;
+      cursor: pointer;
+    }
+    .commands code:hover {
+      background: rgba(0, 224, 255, 0.18);
+      box-shadow: 0 0 12px #00e0ff55;
+    }
+    .commands code::after {
+      content: "Click to copy";
+      position: absolute;
+      right: 18px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #00e0ffcc;
+      font-size: 0.85em;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+    }
+    .commands code:hover::after {
+      opacity: 1;
+    }
+    footer {
+      text-align: center;
+      padding: 18px 0;
+      background: rgba(255,255,255,0.10);
+      border-top: 1px solid rgba(255,255,255,0.12);
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      box-shadow: 0 -2px 16px 0 rgba(0,224,255,0.10);
+      backdrop-filter: blur(4px);
+      color: #b2ffff;
+      text-shadow: 0 1px 8px #00e0ff33;
+      filter: drop-shadow(0 0 8px #00e0ff33);
+    }
+    a {
+      color: #00e0ff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    a:hover {
+      color: #00ffcc;
+      text-decoration: underline;
+    }
+    @media (max-width: 600px) {
+      header h1 { font-size: 2rem; }
+      .glass, .commands { padding: 18px 8px; }
+      main { padding: 20px 2px; }
+      .commands code { font-size: 0.98rem; }
+      .docker-logo { width: 40px; height: 40px; top: -20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <svg class="docker-logo" viewBox="0 0 64 64" fill="none">
+      <rect width="64" height="64" rx="16" fill="#fff0" />
+      <g>
+        <rect x="10" y="38" width="44" height="10" rx="5" fill="#00e0ff"/>
+        <rect x="14" y="32" width="6" height="6" rx="2" fill="#00bcd4"/>
+        <rect x="22" y="32" width="6" height="6" rx="2" fill="#00bcd4"/>
+        <rect x="30" y="32" width="6" height="6" rx="2" fill="#00bcd4"/>
+        <rect x="38" y="32" width="6" height="6" rx="2" fill="#00bcd4"/>
+        <rect x="46" y="32" width="6" height="6" rx="2" fill="#00bcd4"/>
+        <ellipse cx="32" cy="48" rx="18" ry="6" fill="#00e0ff44"/>
+      </g>
+    </svg>
+    <h1>Dockerized Web Server</h1>
+  </header>
+
+  <main>
+    <div class="glass">
+      <p>
+        <strong>Welcome!</strong> This is a <span style="color:#00ffcc;font-weight:bold;">containerized web application</span> served using <strong>Docker &amp; Nginx</strong>.
+      </p>
+      <p>
+        This static site is hosted inside a lightweight container, showcasing the power of containerization for modern deployment workflows.<br>
+        <span style="color:#00e0ff;">Try the commands below to build, run, and manage your own Dockerized web server!</span>
+      </p>
+    </div>
+    <div class="commands">
+      <h2>📦 Basic Docker Commands</h2>
+      <code># Build Docker image</code>
+      <code>docker build -t my-webserver .</code>
+
+      <code># Run a container from image</code>
+      <code>docker run -d -p 8080:80 --name dockerwebserver my-webserver</code>
+
+      <code># Stop a running container</code>
+      <code>docker stop dockerwebserver</code>
+
+      <code># View running containers</code>
+      <code>docker ps</code>
+
+      <code># Check logs</code>
+      <code>docker logs dockerwebserver</code>
+
+      <code># Enter container shell</code>
+      <code>docker exec -it dockerwebserver /bin/sh</code>
+
+      <code># Remove container and image</code>
+      <code>docker rm dockerwebserver</code>
+      <code>docker rmi my-webserver</code>
+    </div>
+  </main>
+
+  <footer>
+    Built with <span style="color:#ff4081;">&#10084;&#65039;</span> using Docker |
+    <a href="https://www.docker.com" target="_blank">Learn more</a>
+  </footer>
+  <script>
+    // Click-to-copy for code blocks
+    document.querySelectorAll('.commands code').forEach(code => {
+      code.addEventListener('click', function() {
+        const text = this.textContent;
+        if (text.startsWith('#')) return; // Don't copy comments
+        navigator.clipboard.writeText(text);
+        this.style.background = 'rgba(0,255,204,0.25)';
+        this.style.color = '#222';
+        setTimeout(() => {
+          this.style.background = '';
+          this.style.color = '';
+        }, 600);
+      });
+    });
+  </script>
+</body>
+</html>
